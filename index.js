@@ -171,9 +171,6 @@ class Chunk {
     assert(this.kanjiMetrics_ && this.furiganaMetrics_, 'Need to call calculateKanjiMetrics and calculateFuriganaMetrics first');
     this.kanjiXOffset_ = Math.max((this.furiganaMetrics_.width - this.kanjiMetrics_.width) / 2, 0);
     this.furiganaXOffset = Math.max((this.kanjiMetrics_.width - this.furiganaMetrics_.width) / 2, 0);
-    if (this.kanji.indexOf('上') !== -1) {
-      debugger;
-    }
     if (this.kanjiXOffset_ > 0) {
       let spacePaddingNeededPerSide = Math.ceil(this.kanjiXOffset_ / hairSpaceWidth);
       let spacePaddingPerSide = Array(spacePaddingNeededPerSide + 1).join(HAIR_SPACE);
@@ -262,7 +259,6 @@ function draw(rawChunks, kanjiFont, furiganaFont, options) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   ctx.fillStyle = textColor;
-  // Draw the results. Furigana first
   let xOffset = leftPadding;
   let yOffset = topPadding;
   for (let line of lines) {
