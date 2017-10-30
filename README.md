@@ -18,7 +18,7 @@ renderFurigana('暴走した｢西武バス｣踏切内進入の一部始終', k
 ```
 
 Result:
-
+![Result 1 png](https://preview.ibb.co/gWcnmR/output1.png "Result 1 png")
 ```js
 renderFurigana([{kanji: 'word1', furigana: 'one'}, {kanji: '  '}, {kanji: 'word-two', furigana: 'two'}], kanjiFont, furiganaFont).then(pngStream => {
   fs.writeFileSync('./output.png', pngStream);
@@ -26,7 +26,7 @@ renderFurigana([{kanji: 'word1', furigana: 'one'}, {kanji: '  '}, {kanji: 'word-
 ```
 
 Result:
-
+![Result 2 png](https://image.ibb.co/gbqjY6/output2.png "Result 2 png")
 ```js
 let options = {
   backgroundColor: 'rgba(255, 0, 0, 1)',
@@ -38,7 +38,7 @@ renderFurigana('青と赤', kanjiFont, furiganaFont, options).then(pngStream => 
 });
 ```
 Result:
-
+![Result 3 png](https://image.ibb.co/bsxL6R/output3.png "Result 3 png")
 ## Options
 You can pass in an options object as the fourth argument. The defaults are:
 ```js
