@@ -187,11 +187,11 @@ function draw(rawChunks, kanjiFont, furiganaFont, options) {
   assert(typeof kanjiFont === typeof '', 'No kanji font provided. You must provide a font name as a string.');
   assert(typeof furiganaFont === typeof '', 'No furigana font provided. You must provide a font name as a string.');
   options = options || {};
-  let maxAllowedWidth = options.maxWidthInPixels || 1000;
-  let minAllowedWidth = options.minWidthInPixels || 0;
-  let maxAllowedHeight = options.maxHeightInPixels || Number.MAX_SAFE_INTEGER;
-  let minAllowedHeight = options.minHeightInPixels || 0;
-  let leftPadding = options.leftPaddingInPixels || 100;
+  let maxAllowedPaddedWidth = options.maxWidthInPixels || 1000;
+  let minAllowedPaddedWidth = options.minWidthInPixels || 0;
+  let maxAllowedPaddedHeight = options.maxHeightInPixels || Number.MAX_SAFE_INTEGER;
+  let minAllowedPaddedHeight = options.minHeightInPixels || 0;
+  let leftPadding = options.leftPaddingInPixels || 10;
   let rightPadding = options.rightPaddingInPixels || 10;
   let topPadding = options.topPaddingInPixels || 10;
   let bottomPadding = options.bottomPaddingInPixels || 10;
@@ -199,7 +199,8 @@ function draw(rawChunks, kanjiFont, furiganaFont, options) {
   let paddingBetweenLines = options.paddingBetweenLinesInPixels || 10;
   let backgroundColor = options.backgroundColor || 'white';
   let textColor = options.backgroundColor || 'black';
-
+  let maxAllowedUnpaddedWidth = maxAllowedPaddedWidth - leftPadding - rightPadding;
+  let maxAllowedUnpaddedHeight = maxAllowedPaddedHeight - topPadding - bottomPadding;
   let chunks = [];
   for (let rawChunk of rawChunks) {
     chunks.push(new Chunk(rawChunk.kanji, rawChunk.furigana));
@@ -227,11 +228,11 @@ function draw(rawChunks, kanjiFont, furiganaFont, options) {
   }
 
   let lines = [];
-  let currentLine = new Line(maxAllowedWidth, paddingBetweenFuriganaAndKanji);
+  let currentLine = new Line(maxAllowedUnpaddedWidth, paddingBetweenFuriganaAndKanji);
   lines.push(currentLine);
   for (let chunk of chunks) {
     if (!currentLine.canAddChunk(chunk)) {
-      currentLine = new Line(maxAllowedWidth, paddingBetweenFuriganaAndKanji);
+      currentLine = new Line(maxAllowedUnpaddedWidth, paddingBetweenFuriganaAndKanji);
       lines.push(currentLine);
     }
     currentLine.addChunk(chunk);
