@@ -1,8 +1,8 @@
 'use strict'
-const reload = require('require-reload')(require);
 const Canvas = require('canvas');
 const fs = require('fs');
 const assert = require('assert');
+
 const HAIR_SPACE = '\u200A';
 
 let kuroshiro;
@@ -198,7 +198,7 @@ function draw(rawChunks, kanjiFont, furiganaFont, options) {
   let paddingBetweenFuriganaAndKanji = options.paddingBetweenFuriganaAndKanjiInPixels || 3;
   let paddingBetweenLines = options.paddingBetweenLinesInPixels || 10;
   let backgroundColor = options.backgroundColor || 'white';
-  let textColor = options.backgroundColor || 'black';
+  let textColor = options.textColor || 'black';
   let maxAllowedUnpaddedWidth = maxAllowedPaddedWidth - leftPadding - rightPadding;
   let maxAllowedUnpaddedHeight = maxAllowedPaddedHeight - topPadding - bottomPadding;
   let chunks = [];

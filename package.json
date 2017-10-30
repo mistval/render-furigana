@@ -27,6 +27,9 @@
   },
   "homepage": "https://github.com/mistval/render_furigana#readme",
   "dependencies": {
+    "canvas": "^1.6.7"
+  },
+  "optionalDependencies": {
     "htmlparser": "^1.7.7",
     "kuroshiro": "^0.1.5"
   }
