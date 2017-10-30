@@ -1,0 +1,33 @@
+{
+  "name": "render-furigana",
+  "version": "1.0.0",
+  "description": "Render Japanese text with furigana into a PNG buffer.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mistval/render_furigana.git"
+  },
+  "keywords": [
+    "japanese",
+    "kanji",
+    "furigana",
+    "render",
+    "png",
+    "buffer",
+    "hiragana",
+    "kana"
+  ],
+  "author": "Randall Schmidt",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mistval/render_furigana/issues"
+  },
+  "homepage": "https://github.com/mistval/render_furigana#readme",
+  "dependencies": {
+    "htmlparser": "^1.7.7",
+    "kuroshiro": "^0.1.5"
+  }
+}
