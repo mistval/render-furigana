@@ -18,7 +18,7 @@ renderFurigana('暴走した｢西武バス｣踏切内進入の一部始終', k
 ```
 
 Result:
-
+![Result 1 png](https://preview.ibb.co/gWcnmR/output1.png "Result 1 png")
 ```js
 renderFurigana([{kanji: 'word1', furigana: 'one'}, {kanji: '  '}, {kanji: 'word-two', furigana: 'two'}], kanjiFont, furiganaFont).then(pngStream => {
   fs.writeFileSync('./output.png', pngStream);
