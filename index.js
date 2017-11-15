@@ -298,9 +298,7 @@ function splitNonFuriganaChunks(chunks) {
       for (let character of characters) {
         let isKana = character >= '\u3040' && character <= '\u30FF';
         if (isKana) {
-          if (nextNonKanaChunk) {
-            nextNonKanaChunk = undefined;
-          }
+          nextNonKanaChunk = undefined;
           newRawChunks.push({kanji: character});
         } else {
           if (!nextNonKanaChunk) {
@@ -311,6 +309,7 @@ function splitNonFuriganaChunks(chunks) {
         }
       }
     } else {
+      nextNonKanaChunk = undefined;
       newRawChunks.push(chunk);
     }
   }
