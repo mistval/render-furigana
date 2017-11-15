@@ -1,7 +1,7 @@
 # Render Furigana
-Render Japanese text with furigana to a PNG stream.
+Render Japanese text with furigana to a PNG buffer.
 
-You can specify the text and the furigana yourself, or you can have the script do it automatically, using kuroshiro.
+You can specify the furigana yourself, or you can have the script do it automatically, using kuroshiro.
 
 Cairo is required for image rendering. If you don't have it installed, see canvas' page for instructions: https://www.npmjs.com/package/canvas
 
@@ -12,16 +12,16 @@ const fs = require('fs');
 const kanjiFont = '40px IPAMincho';
 const furiganaFont = '20px IPAMincho';
 
-renderFurigana('暴走した｢西武バス｣踏切内進入の一部始終', kanjiFont, furiganaFont).then(pngStream => {
-  fs.writeFileSync('./output.png', pngStream);
+renderFurigana('暴走した｢西武バス｣踏切内進入の一部始終', kanjiFont, furiganaFont).then(pngBuffer => {
+  fs.writeFileSync('./output.png', pngBuffer);
 });
 ```
 
 Result:
 ![Result 1 png](https://preview.ibb.co/gWcnmR/output1.png "Result 1 png")
 ```js
-renderFurigana([{kanji: 'word1', furigana: 'one'}, {kanji: '  '}, {kanji: 'word-two', furigana: 'two'}], kanjiFont, furiganaFont).then(pngStream => {
-  fs.writeFileSync('./output.png', pngStream);
+renderFurigana([{kanji: 'word1', furigana: 'one'}, {kanji: '  '}, {kanji: 'word-two', furigana: 'two'}], kanjiFont, furiganaFont).then(pngBuffer => {
+  fs.writeFileSync('./output.png', pngBuffer);
 });
 ```
 
@@ -33,8 +33,8 @@ let options = {
   textColor: 'rgba(0, 0, 255, 1)',
 }
 
-renderFurigana('青と赤', kanjiFont, furiganaFont, options).then(pngStream => {
-  fs.writeFileSync('./output.png', pngStream);
+renderFurigana('青と赤', kanjiFont, furiganaFont, options).then(pngBuffer => {
+  fs.writeFileSync('./output.png', pngBuffer);
 });
 ```
 Result:
