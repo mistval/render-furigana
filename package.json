@@ -1,6 +1,6 @@
 {
   "name": "render-furigana",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Render Japanese text with furigana into a PNG buffer.",
   "main": "index.js",
   "scripts": {
