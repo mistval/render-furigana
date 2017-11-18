@@ -133,7 +133,8 @@ class Line {
 
 class Chunk {
   constructor(kanji, furigana) {
-    this.kanji = kanji;
+    const spacesPerIdeographicSpace = 2;
+    this.kanji = kanji.replace(/\u3000/g, Array(spacesPerIdeographicSpace + 1).join(' '));
     this.furigana = furigana || '';
     this.furiganaXOffset = 0;
     this.kanjiXOffset_ = 0;
@@ -178,6 +179,15 @@ class Chunk {
       this.kanjiMetrics_.width += spacePaddingNeededPerSide * 2 * hairSpaceWidth;
     }
   }
+}
+
+function startsWithNewline(chunk) {
+  return chunk.kanji.startsWith('\n');
+}
+
+function removeNewlines(chunk) {
+  chunk.kanji = chunk.kanji.replace(/\n/g, '');
+  return chunk;
 }
 
 function draw(rawChunks, kanjiFont, furiganaFont, options) {
@@ -228,11 +238,11 @@ function draw(rawChunks, kanjiFont, furiganaFont, options) {
   let currentLine = new Line(maxAllowedUnpaddedWidth, paddingBetweenFuriganaAndKanji);
   lines.push(currentLine);
   for (let chunk of chunks) {
-    if (!currentLine.canAddChunk(chunk)) {
+    if (!currentLine.canAddChunk(chunk) || startsWithNewline(chunk)) {
       currentLine = new Line(maxAllowedUnpaddedWidth, paddingBetweenFuriganaAndKanji);
       lines.push(currentLine);
     }
-    currentLine.addChunk(chunk);
+    currentLine.addChunk(removeNewlines(chunk));
   }
 
   let totalHeight = 0;
