@@ -55,7 +55,10 @@ function extractFurigana(text) {
           if (child.type === 'text') {
             thisResult.kanji += child.raw;
           } else if (child.name === 'rt') {
-            thisResult.furigana += child.children.map(innerChild => innerChild.raw).join('');
+            let thisFurigana = child.children.map(innerChild => innerChild.raw).join('');
+            if (thisFurigana !== thisResult.kanji) {
+              thisResult.furigana += thisFurigana;
+            }
           }
         }
       } else if (element.type === 'text') {
