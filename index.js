@@ -48,6 +48,7 @@ function extractFurigana(text) {
     throw new Error('Could not load htmlparser, which is necessary for automatically detecting furigana. You must install htmlparser (which is an optional dependency) in order to use automatic furigana detection.');
   }
   return kuroshiroInit.then(() => {
+    // Call into kuroshiro to get the furigana for the input text.
     let kuroshiroResults = kuroshiro.convert(text, {mode: 'furigana'});
     let parseHandler = new htmlparser.DefaultHandler(function(error, dom) {});
     let parser = new htmlparser.Parser(parseHandler);
@@ -83,6 +84,9 @@ function extractFurigana(text) {
   });
 }
 
+/*
+ * Decorates a chunk with an X position.
+ */
 class PositionedChunk {
   constructor(x, chunk) {
     this.x = x,
@@ -90,6 +94,10 @@ class PositionedChunk {
   }
 }
 
+/*
+ * Contains chunks that should be drawn together
+ * as a line.
+ */
 class Line {
   constructor(maxWidth, paddingBetweenFuriganaAndKanji) {
     this.paddingBetweenFuriganaAndKanji_ = paddingBetweenFuriganaAndKanji;
@@ -155,6 +163,10 @@ class Line {
   }
 }
 
+/*
+ * Contains one string of kanji and its associated string of furigana,
+ * plus information about where to draw them.
+ */
 class Chunk {
   constructor(kanji, furigana) {
     // The canvas library doesn't handle ideographic spaces well, so convert them to
