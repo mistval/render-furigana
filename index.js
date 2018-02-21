@@ -96,19 +96,19 @@ class Line {
     this.maxWidth_ = maxWidth;
     this.widthRemaining_ = maxWidth;
     this.height_ = 0;
-    this.positionedChunks = [];
+    this.positionedChunks_ = [];
     this.furiganaPartHeight_ = 0;
     this.kanjiPartHeight_ = 0;
   }
 
   canAddChunk(chunk) {
-    return chunk.calculateWidth() <= this.widthRemaining_;
+    return chunk.getWidth() <= this.widthRemaining_;
   }
 
   addChunk(chunk) {
-    let x = this.maxWidth_ - this.widthRemaining_;
-    this.widthRemaining_ -= chunk.calculateWidth();
-    this.positionedChunks.push(new PositionedChunk(x, chunk));
+    let xPosition = this.maxWidth_ - this.widthRemaining_;
+    this.widthRemaining_ -= chunk.getWidth();
+    this.positionedChunks_.push(new PositionedChunk(xPosition, chunk));
     this.furiganaPartHeight_ = Math.max(this.furiganaPartHeight_, chunk.getFuriganaHeight());
     this.kanjiPartHeight_ = Math.max(this.kanjiPartHeight_, chunk.getKanjiHeight());
   }
@@ -117,7 +117,7 @@ class Line {
     return this.maxWidth_ - this.widthRemaining_;
   }
 
-  calculateHeight() {
+  getHeight() {
     let height = this.furiganaPartHeight_ + this.kanjiPartHeight_;
     if (this.furiganaPartHeight_ !== 0) {
       height += this.paddingBetweenFuriganaAndKanji_;
@@ -126,8 +126,16 @@ class Line {
   }
 
   drawKanji(ctx, xOffset, yOffset) {
+    /*
+     * The individual kanji strings can simply be concatenated into one string and drawn
+     * because the padding between them is accomplished by concatenating them with hair
+     * spaces. This allows us to draw an entire line of kanji with just one call to
+     * the canvas library, which improves performance significantly. Future improvements
+     * could include giving that same treatment to the furigana part, which should also
+     * yield performance benefits.
+     */
     let kanjiString = '';
-    for (let positionedChunk of this.positionedChunks) {
+    for (let positionedChunk of this.positionedChunks_) {
       kanjiString += positionedChunk.chunk.kanji;
     }
     let kanjiStringMetrics = ctx.measureText(kanjiString);
@@ -138,10 +146,10 @@ class Line {
   }
 
   drawFurigana(ctx, xOffset, yOffset) {
-    for (let positionedChunk of this.positionedChunks) {
+    for (let positionedChunk of this.positionedChunks_) {
       ctx.fillText(
         positionedChunk.chunk.furigana,
-        xOffset + positionedChunk.x + positionedChunk.chunk.furiganaXOffset,
+        xOffset + positionedChunk.x + positionedChunk.chunk.getFuriganaXOffset(),
         yOffset + positionedChunk.chunk.getFuriganaYOffset());
     }
   }
@@ -149,11 +157,13 @@ class Line {
 
 class Chunk {
   constructor(kanji, furigana) {
+    // The canvas library doesn't handle ideographic spaces well, so convert them to
+    // standard spaces.
     const spacesPerIdeographicSpace = 2;
     this.kanji = kanji.replace(/\u3000/g, Array(spacesPerIdeographicSpace + 1).join(' '));
+
     this.furigana = furigana || '';
-    this.furiganaXOffset = 0;
-    this.kanjiXOffset_ = 0;
+    this.furiganaXOffset_ = 0;
   }
 
   calculateKanjiMetrics(ctx) {
@@ -164,19 +174,18 @@ class Chunk {
     this.furiganaMetrics_ = ctx.measureText(this.furigana);
   }
 
-  calculateWidth() {
+  getWidth() {
+    this.validateMetricsCalculated_();
     return Math.max(this.kanjiMetrics_.width, this.furiganaMetrics_.width);
   }
 
-  getHeight_(metrics) {
-    return metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
-  }
-
   getFuriganaHeight() {
+    this.validateMetricsCalculated_();
     return this.getHeight_(this.furiganaMetrics_);
   }
 
   getKanjiHeight() {
+    this.validateMetricsCalculated_();
     return this.getHeight_(this.kanjiMetrics_);
   }
 
@@ -184,16 +193,33 @@ class Chunk {
     return this.furiganaMetrics_.actualBoundingBoxAscent;
   }
 
+  getFuriganaXOffset() {
+    return this.furiganaXOffset_;
+  }
+
   addPaddingAndCalculateOffsets(hairSpaceWidth) {
-    assert(this.kanjiMetrics_ && this.furiganaMetrics_, 'Need to call calculateKanjiMetrics and calculateFuriganaMetrics first');
-    this.kanjiXOffset_ = Math.max((this.furiganaMetrics_.width - this.kanjiMetrics_.width) / 2, 0);
-    this.furiganaXOffset = Math.max((this.kanjiMetrics_.width - this.furiganaMetrics_.width) / 2, 0);
-    if (this.kanjiXOffset_ > 0) {
-      let spacePaddingNeededPerSide = Math.ceil(this.kanjiXOffset_ / hairSpaceWidth);
+    this.validateMetricsCalculated_();
+
+    // Calculate X offsets such that the furigana is centered about the kanji.
+    const kanjiXOffset = Math.max((this.furiganaMetrics_.width - this.kanjiMetrics_.width) / 2, 0);
+    this.furiganaXOffset_ = Math.max((this.kanjiMetrics_.width - this.furiganaMetrics_.width) / 2, 0);
+
+    // If the kanji X offset is greater than 0, then add enough hair spaces
+    // to the kanji string until it does not need an offset.
+    if (kanjiXOffset > 0) {
+      let spacePaddingNeededPerSide = Math.ceil(kanjiXOffset / hairSpaceWidth);
       let spacePaddingPerSide = Array(spacePaddingNeededPerSide + 1).join(HAIR_SPACE);
       this.kanji = spacePaddingPerSide + this.kanji + spacePaddingPerSide;
       this.kanjiMetrics_.width += spacePaddingNeededPerSide * 2 * hairSpaceWidth;
     }
+  }
+
+  getHeight_(metrics) {
+    return metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+  }
+
+  validateMetricsCalculated_() {
+    assert(this.kanjiMetrics_ && this.furiganaMetrics_, 'Metrics not yet calculated');
   }
 }
 
@@ -240,7 +266,7 @@ function draw(rawChunks, kanjiFont, furiganaFont, options) {
   }
 
   // Calculate the furigana metrics
-  // (We calculate the furigana and kanji netrics in separate loops because setting the font on the canvas context is pretty slow)
+  // (We calculate the furigana and kanji metrics in separate loops because setting the font on the canvas context is slow.
   ctx.font = furiganaFont;
   for (let chunk of chunks) {
     chunk.calculateFuriganaMetrics(ctx);
@@ -263,7 +289,7 @@ function draw(rawChunks, kanjiFont, furiganaFont, options) {
 
   let totalHeight = 0;
   for (let line of lines) {
-    totalHeight += line.calculateHeight();
+    totalHeight += line.getHeight();
     totalHeight += paddingBetweenLines;
   }
   totalHeight -= paddingBetweenLines;
@@ -284,19 +310,23 @@ function draw(rawChunks, kanjiFont, furiganaFont, options) {
   ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  // Draw the furigana
   ctx.fillStyle = textColor;
   let xOffset = leftPadding;
   let yOffset = topPadding;
   for (let line of lines) {
     line.drawFurigana(ctx, xOffset, yOffset);
-    yOffset += line.calculateHeight() + paddingBetweenLines;
+    yOffset += line.getHeight() + paddingBetweenLines;
   }
 
+  // Draw the kanji
+  // (Once again we draw the furigana and kanji in different loops because setting the font
+  // on the canvas context is slow)
   ctx.font = kanjiFont;
   yOffset = topPadding;
   for (let line of lines) {
     line.drawKanji(ctx, xOffset, yOffset);
-    yOffset += line.calculateHeight() + paddingBetweenLines;
+    yOffset += line.getHeight() + paddingBetweenLines;
   }
 
   return new Promise((fulfill, reject) => {
