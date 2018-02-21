@@ -1,4 +1,10 @@
-'use strict'
+/*
+ * This module detects furigana for a given input string containing kanji
+ * and renders it into a PNG buffer. Optimizations for speed have been made.
+ *
+ * Full project source: https://github.com/mistval/render_furigana
+ */
+
 const Canvas = require('canvas');
 const fs = require('fs');
 const assert = require('assert');
@@ -9,16 +15,17 @@ let kuroshiro;
 try {
   kuroshiro = require('kuroshiro');
 } catch (err) {
-  // It's only necessary if you want automatic furigana detection.
+  // kuroshiro is only necessary if you want automatic furigana detection.
 }
 
 let htmlparser;
 try {
   htmlparser = require('htmlparser');
 } catch (err) {
-  // It's only necessary if you want automatic furigana detection.
+  // htmlparser is only necessary if you want automatic furigana detection.
 }
 
+// Initialize kuroshiro
 const kuroshiroInit = new Promise((fulfill, reject) => {
   if (kuroshiro) {
     kuroshiro.init(err => {
@@ -47,6 +54,12 @@ function extractFurigana(text) {
     parser.parseComplete(kuroshiroResults);
     let kuroshiroResultsAsDom = parseHandler.dom;
 
+    /*
+     * Kuroshiro returns results as an array of ruby elements.
+     * See here for information about how those work:
+     * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/ruby
+     * Below, we convert the rubys to a more convenient structure.
+     */
     let results = [];
     for (let element of kuroshiroResultsAsDom) {
       let thisResult = {kanji: '', furigana: ''};
