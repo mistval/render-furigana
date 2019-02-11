@@ -6,14 +6,17 @@
  */
 
 const Canvas = require('canvas');
-const fs = require('fs');
+const KuromojiAnalyzer = require('kuroshiro-analyzer-kuromoji');
 const assert = require('assert');
 
 const HAIR_SPACE = '\u200A';
 
 let kuroshiro;
+let kuroshiroInit;
 try {
-  kuroshiro = require('kuroshiro');
+  Kuroshiro = require('kuroshiro');
+  kuroshiro = new Kuroshiro();
+  kuroshiroInit = kuroshiro.init(new KuromojiAnalyzer());
 } catch (err) {
   // kuroshiro is only necessary if you want automatic furigana detection.
 }
@@ -25,63 +28,48 @@ try {
   // htmlparser is only necessary if you want automatic furigana detection.
 }
 
-// Initialize kuroshiro
-const kuroshiroInit = new Promise((fulfill, reject) => {
-  if (kuroshiro) {
-    kuroshiro.init(err => {
-      if (err) {
-        reject(err);
-      } else {
-        fulfill();
-      }
-    });
-  } else {
-    fulfill();
-  }
-});
-
-function extractFurigana(text) {
+async function extractFurigana(text) {
   if (!kuroshiro) {
-    throw new Error('Could not load kuroshiro, which is necessary for automatically detecting furigana. You must install kuroshiro (which is an optional dependency) in order to use automatic furigana detection.');
+    throw new Error('Could not load kuroshiro, which is necessary for automatically detecting furigana. You must install kuroshiro and kuroshiro-analyzer-kuromoji (which are optional dependencies) in order to use automatic furigana detection.');
   }
   if (!htmlparser) {
     throw new Error('Could not load htmlparser, which is necessary for automatically detecting furigana. You must install htmlparser (which is an optional dependency) in order to use automatic furigana detection.');
   }
-  return kuroshiroInit.then(() => {
-    // Call into kuroshiro to get the furigana for the input text.
-    let kuroshiroResults = kuroshiro.convert(text, {mode: 'furigana'});
-    let parseHandler = new htmlparser.DefaultHandler(function(error, dom) {});
-    let parser = new htmlparser.Parser(parseHandler);
-    parser.parseComplete(kuroshiroResults);
-    let kuroshiroResultsAsDom = parseHandler.dom;
 
-    /*
-     * Kuroshiro returns results as an array of ruby elements.
-     * See here for information about how those work:
-     * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/ruby
-     * Below, we convert the rubys to a more convenient structure.
-     */
-    let results = [];
-    for (let element of kuroshiroResultsAsDom) {
-      let thisResult = {kanji: '', furigana: ''};
-      if (element.name === 'ruby') {
-        for (let child of element.children) {
-          if (child.type === 'text') {
-            thisResult.kanji += child.raw;
-          } else if (child.name === 'rt') {
-            let thisFurigana = child.children.map(innerChild => innerChild.raw).join('');
-            if (thisFurigana !== thisResult.kanji) {
-              thisResult.furigana += thisFurigana;
-            }
+  await kuroshiroInit;
+
+  const kuroshiroResults = await kuroshiro.convert(text, {mode: 'furigana'});
+  let parseHandler = new htmlparser.DefaultHandler(() => {});
+  let parser = new htmlparser.Parser(parseHandler);
+  parser.parseComplete(kuroshiroResults);
+  let kuroshiroResultsAsDom = parseHandler.dom;
+
+  /*
+    * Kuroshiro returns results as an array of ruby elements.
+    * See here for information about how those work:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/ruby
+    * Below, we convert the rubys to a more convenient structure.
+    */
+  let results = [];
+  for (let element of kuroshiroResultsAsDom) {
+    let thisResult = {kanji: '', furigana: ''};
+    if (element.name === 'ruby') {
+      for (let child of element.children) {
+        if (child.type === 'text') {
+          thisResult.kanji += child.raw;
+        } else if (child.name === 'rt') {
+          let thisFurigana = child.children.map(innerChild => innerChild.raw).join('');
+          if (thisFurigana !== thisResult.kanji) {
+            thisResult.furigana += thisFurigana;
           }
         }
-      } else if (element.type === 'text') {
-        thisResult.kanji += element.raw;
       }
-      results.push(thisResult);
+    } else if (element.type === 'text') {
+      thisResult.kanji += element.raw;
     }
-    return results;
-  });
+    results.push(thisResult);
+  }
+  return results;
 }
 
 /*
@@ -247,11 +235,9 @@ function removeNewlines(chunk) {
 function draw(rawChunks, kanjiFont, furiganaFont, options) {
   assert(typeof kanjiFont === typeof '', 'No kanji font provided. You must provide a font name as a string.');
   assert(typeof furiganaFont === typeof '', 'No furigana font provided. You must provide a font name as a string.');
+
   options = options || {};
   let maxAllowedPaddedWidth = options.maxWidthInPixels || 1000;
-  let minAllowedPaddedWidth = options.minWidthInPixels || 0;
-  let maxAllowedPaddedHeight = options.maxHeightInPixels || Number.MAX_SAFE_INTEGER;
-  let minAllowedPaddedHeight = options.minHeightInPixels || 0;
   let leftPadding = options.leftPaddingInPixels || 10;
   let rightPadding = options.rightPaddingInPixels || 10;
   let topPadding = options.topPaddingInPixels || 10;
@@ -261,8 +247,8 @@ function draw(rawChunks, kanjiFont, furiganaFont, options) {
   let backgroundColor = options.backgroundColor || 'white';
   let textColor = options.textColor || 'black';
   let maxAllowedUnpaddedWidth = maxAllowedPaddedWidth - leftPadding - rightPadding;
-  let maxAllowedUnpaddedHeight = maxAllowedPaddedHeight - topPadding - bottomPadding;
   let chunks = [];
+
   for (let rawChunk of rawChunks) {
     chunks.push(new Chunk(rawChunk.kanji, rawChunk.furigana));
   }
