@@ -29,6 +29,7 @@ try {
 }
 
 async function extractFurigana(text) {
+  text = text.replace(/\n/g, '');
   if (!kuroshiro) {
     throw new Error('Could not load kuroshiro, which is necessary for automatically detecting furigana. You must install kuroshiro and kuroshiro-analyzer-kuromoji (which are optional dependencies) in order to use automatic furigana detection.');
   }
@@ -253,7 +254,7 @@ function draw(rawChunks, kanjiFont, furiganaFont, options) {
     chunks.push(new Chunk(rawChunk.kanji, rawChunk.furigana));
   }
 
-  let canvas = new Canvas(0, 0);
+  let canvas = Canvas.createCanvas(0, 0);
   let ctx = canvas.getContext('2d');
 
   // Calculate the kanji metrics
@@ -307,6 +308,7 @@ function draw(rawChunks, kanjiFont, furiganaFont, options) {
 
   ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.font = furiganaFont;
 
   // Draw the furigana
   ctx.fillStyle = textColor;
