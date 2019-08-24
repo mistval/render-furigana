@@ -9,7 +9,7 @@ const Canvas = require('canvas');
 const KuromojiAnalyzer = require('kuroshiro-analyzer-kuromoji');
 const assert = require('assert');
 
-const HAIR_SPACE = '\u200A';
+const HAIR_SPACE = ' ';
 
 let kuroshiro;
 let kuroshiroInit;
