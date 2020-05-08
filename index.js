@@ -6,7 +6,6 @@
  */
 
 const Canvas = require('canvas');
-const KuromojiAnalyzer = require('kuroshiro-analyzer-kuromoji');
 const assert = require('assert');
 
 const HAIR_SPACE = ' ';
@@ -14,7 +13,8 @@ const HAIR_SPACE = ' ';
 let kuroshiro;
 let kuroshiroInit;
 try {
-  Kuroshiro = require('kuroshiro');
+  const Kuroshiro = require('kuroshiro');
+  const KuromojiAnalyzer = require('kuroshiro-analyzer-kuromoji');
   kuroshiro = new Kuroshiro();
   kuroshiroInit = kuroshiro.init(new KuromojiAnalyzer());
 } catch (err) {
