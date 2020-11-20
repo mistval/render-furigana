@@ -10,34 +10,41 @@ const assert = require('assert');
 
 const HAIR_SPACE = ' ';
 
-let kuroshiro;
-let kuroshiroInit;
-try {
-  const Kuroshiro = require('kuroshiro');
-  const KuromojiAnalyzer = require('kuroshiro-analyzer-kuromoji');
-  kuroshiro = new Kuroshiro();
-  kuroshiroInit = kuroshiro.init(new KuromojiAnalyzer());
-} catch (err) {
-  // kuroshiro is only necessary if you want automatic furigana detection.
+let _kuroshiro;
+let _htmlparser;
+
+async function getKuroshiro() {
+  if (!_kuroshiro) {
+    try {
+      const Kuroshiro = require('kuroshiro');
+      const KuromojiAnalyzer = require('kuroshiro-analyzer-kuromoji');
+      _kuroshiro = new Kuroshiro();
+      await _kuroshiro.init(new KuromojiAnalyzer());
+    } catch (err) {
+      throw new Error('Could not load kuroshiro, which is necessary for automatically detecting furigana. You must install kuroshiro and kuroshiro-analyzer-kuromoji (which are optional dependencies) in order to use automatic furigana detection.');
+    }
+  }
+
+  return _kuroshiro;
 }
 
-let htmlparser;
-try {
-  htmlparser = require('htmlparser');
-} catch (err) {
-  // htmlparser is only necessary if you want automatic furigana detection.
+function getHtmlParser() {
+  if (!_htmlparser) {
+    try {
+      _htmlparser = require('htmlparser');
+    } catch (err) {
+      throw new Error('Could not load htmlparser, which is necessary for automatically detecting furigana. You must install htmlparser (which is an optional dependency) in order to use automatic furigana detection.');
+    }
+  }
+
+  return _htmlparser;
 }
 
 async function extractFurigana(text) {
   text = text.replace(/\n/g, '');
-  if (!kuroshiro) {
-    throw new Error('Could not load kuroshiro, which is necessary for automatically detecting furigana. You must install kuroshiro and kuroshiro-analyzer-kuromoji (which are optional dependencies) in order to use automatic furigana detection.');
-  }
-  if (!htmlparser) {
-    throw new Error('Could not load htmlparser, which is necessary for automatically detecting furigana. You must install htmlparser (which is an optional dependency) in order to use automatic furigana detection.');
-  }
 
-  await kuroshiroInit;
+  const kuroshiro = await getKuroshiro();
+  const htmlparser = getHtmlParser();
 
   const kuroshiroResults = await kuroshiro.convert(text, {mode: 'furigana'});
   let parseHandler = new htmlparser.DefaultHandler(() => {});
